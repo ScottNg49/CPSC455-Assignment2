@@ -19,17 +19,22 @@ app.use(bodyParser.urlencoded({ extended: true}));
 app.get('/',function(req,res){
 
 res.sendFile(__dirname + "/index.html");
-res.redirect('/login');
 
-console.log(username);
+
 
 });
 app.post('/login',function(req,res){
-  var username=req.body.username;
-  var password=req.body.password;
-  console.log(username);
+
+  res.send("Success!");
+
 
 
 
 });
+app.post('/create',function(req,res){
+
+res.send("Success!");
+}
+
+
 app.listen(3000);
