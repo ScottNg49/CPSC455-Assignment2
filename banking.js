@@ -2,10 +2,10 @@
 // Import Express Client Sessions and Body Parser
 
 const express = require('express');
-const sessions =require('client-sessions');
-const bodyParser= require("body-parser");
+const sessions = require('client-sessions');
+const bodyParser = require("body-parser");
 
-//Create th express app.
+//Create the express app.
 var app=express();
 app.use(sessions({
 cookieName: 'session',
@@ -15,22 +15,62 @@ activeDuration:5*60*1000,
 
 }));
 
-var users= [['John','Secret']]
+
+// TEMP - stored users (Security Risk)
+var authorizedUsers= [['John','Secret']]
+
 //Needed to use post/parse the request body
 app.use(bodyParser.urlencoded({ extended: true}));
+
 app.get('/',function(req,res){
 
     res.sendFile(__dirname + "/index.html");
 
-
-
 });
+
+app.get('/register.html', function(req, res) {
+	console.log("I got register"); 
+	res.sendFile(__dirname + "/register.html");
+});
+
+app.post('/index', function(req, res) {
+
+	//TODO: send user input to register to new account. Place into database
+	console.log(req.body.first);
+	console.log(req.body.last);
+	console.log(req.body.email);
+	console.log(req.body.password);
+	res.sendFile(__dirname + "/index.html");
+});
+
+// Login script when the user inputs user name and password
 app.post('/login',function(req,res){
+	// get username and password from form
+	var userName = req.body.username;
+	var password = req.body.password;
+	console.log(userName);
+	console.log(password);
 
-  res.send("Success!");
+	var correctPass = undefined;
 
+	// is valid user?
+	for (let index = 0; index < authorizedUsers.length; index++) {
+		if (authorizedUsers[index][0] == userName) {
+			console.log("We found a userName!");
+			correctPass = authorizedUsers[index][1];
+			break;
+		}
+	}
 
-
+	// Check if username matches with input password 
+	if (correctPass && correctPass === password) {
+		// set the session
+		req.session.username = userName;
+		res.send("Success" + " " + username + " " + password);
+		res.redirect('/dashboard');
+	} else {
+		res.send("Wrong");
+	}
 
 });
 app.post('/create',function(req,res){

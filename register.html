@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Register Forms</title>
+</head>
+<body>
+	<h1>Register</h1>
+	
+	<form action = "/index" method='POST'>
+		<div>
+			<!-- User input for First name & Last name -->
+			<!-- FIRST NAME -->
+			<label for = "fName">First Name: </label>
+			<input name="first" type = "text" placeholder="John" required>
+
+			<!-- LAST NAME -->
+			<label for = "lName">Last Name: </label>
+			<input name = "last" type = "text" placeholder="Smith" required>
+
+			<!-- Email -->
+			<label for = "email">Email: </label>
+			<input name="email" type="email" placeholder="your email" required>
+
+			<label for = "password">Password: </label>
+			<input name="password" type="password" placeholder="your password" pattern=".{5,10}" required title="Password must be between 5 and 10 characters">
+
+			<button>Submit</button>
+		</div>
+	</form>
+	
+	
+
+
+</body>
+</html>
