@@ -19,11 +19,11 @@ app.use(sessions({
 
 app.get('/', function(req,res) {
     res.redirect('/loginpage')
-    if (req.session.username) {
+    /*if (req.session.username) {
         res.redirect('/dashboard')
     } else {
         res.redirect ('/loginpage')
-    }
+    }*/
 })
 
 app.get('/loginpage', function(req,res) {
@@ -40,9 +40,9 @@ app.post('/login', function(req,res) {
     var login = req.body.username
     var password = req.body.password
 
-    res.send(login)
-    res.send(password)
-    res.send('end')
+    res.send(login + password + "END")
+
+    
 
     // sanitize login and password
         // do something
