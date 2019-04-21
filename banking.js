@@ -73,23 +73,29 @@ app.post('/login',function(req,res){
 	if (correctPass && correctPass === pass) {
 		// set the session
 
-    res.redirect("/dashboard");
+      res.redirect("/dashboard");
 
 	} else {
-		res.send("Wrong");
+		  res.send("Wrong");
 	}
 
 });
 app.post('/create',function(req,res){
 
-  res.send("Success!");
+      res.send("Success!");
 });
 app.get('/dashboard',function(req,res){
 
 
-    res.send("Success");
+      res.send("Success");
 
 
 });
+app.get('/logout', function(req, res){
 
+    // Kill the session
+    req.session.reset();
+
+    res.redirect('/');
+});
 app.listen(3000);

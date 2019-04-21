@@ -6,11 +6,6 @@ function loadDoc() {
   var message= "<?xml version='1.0'?>"+"<account>"+"<username>"+document.getElementById('username').value+
   "</username>"+"<password>"+document.getElementById("password").value+"</password>"+"</account>";
   var xhttp = new XMLHttpRequest();
-  xhttp.onreadystatechange = function() {
-    if (this.readyState == 4 && this.status == 200) {
-      document.getElementById("demo").innerHTML = this.responseText;
-    }
-  };
   xhttp.open("POST", "/login", false);
   xhttp.setRequestHeader("Content-type", "text/xml");
   xhttp.send(message);
@@ -33,4 +28,3 @@ function loadDoc() {
 <<<<<<< HEAD
 	<h2><a href="register.html">Click here</a> to register</h2>
 =======
-</html>
