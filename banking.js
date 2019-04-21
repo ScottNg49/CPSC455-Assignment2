@@ -4,9 +4,10 @@
 const express = require('express');
 const sessions = require('client-sessions');
 const bodyParser = require("body-parser");
-
+require('body-parser-xml')(bodyParser);
 //Create the express app.
 var app=express();
+var fs=require('fs');
 app.use(sessions({
 cookieName: 'session',
 secret: 'random_string_goes_here',
@@ -20,16 +21,21 @@ activeDuration:5*60*1000,
 var authorizedUsers= [['John','Secret']]
 
 //Needed to use post/parse the request body
-app.use(bodyParser.urlencoded({ extended: true}));
+app.use(bodyParser.xml());
 
 app.get('/',function(req,res){
-
+  if(req.session.username)
+  {
+    res.redirect("/dashboard");
+  }
+  else
+  {
     res.sendFile(__dirname + "/index.html");
-
+  }
 });
 
 app.get('/register.html', function(req, res) {
-	console.log("I got register"); 
+	console.log("I got register");
 	res.sendFile(__dirname + "/register.html");
 });
 
@@ -46,28 +52,29 @@ app.post('/index', function(req, res) {
 // Login script when the user inputs user name and password
 app.post('/login',function(req,res){
 	// get username and password from form
-	var userName = req.body.username;
-	var password = req.body.password;
-	console.log(userName);
-	console.log(password);
+	var user = req.body.account.username;
+	var pass = req.body.account.password;
+	console.log(user);
+	console.log(pass);
 
 	var correctPass = undefined;
 
 	// is valid user?
 	for (let index = 0; index < authorizedUsers.length; index++) {
-		if (authorizedUsers[index][0] == userName) {
+		if (authorizedUsers[index][0] == user) {
 			console.log("We found a userName!");
+      req.session.username=user;
 			correctPass = authorizedUsers[index][1];
 			break;
 		}
 	}
 
-	// Check if username matches with input password 
-	if (correctPass && correctPass === password) {
+	// Check if username matches with input password
+	if (correctPass && correctPass === pass) {
 		// set the session
-		req.session.username = userName;
-		res.send("Success" + " " + username + " " + password);
-		res.redirect('/dashboard');
+
+    res.redirect("/dashboard");
+
 	} else {
 		res.send("Wrong");
 	}
@@ -75,12 +82,12 @@ app.post('/login',function(req,res){
 });
 app.post('/create',function(req,res){
 
-res.send("Success!");
+  res.send("Success!");
 });
 app.get('/dashboard',function(req,res){
 
 
-  res.sendfile(__dirname+"/Dashboard.html");
+    res.send("Success");
 
 
 });
