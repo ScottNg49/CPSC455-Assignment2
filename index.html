@@ -1,29 +1,35 @@
 
 <html>
+
+<script>
+function loadDoc() {
+  var message= "<?xml version='1.0'?>"+"<account>"+"<username>"+document.getElementById('username').value+
+  "</username>"+"<password>"+document.getElementById("password").value+"</password>"+"</account>";
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      document.getElementById("demo").innerHTML = this.responseText;
+    }
+  };
+  xhttp.open("POST", "/login", false);
+  xhttp.setRequestHeader("Content-type", "text/xml");
+  xhttp.send(message);
+}
+</script>
+
 <div>
   <title> Welcome to NorthSide Banking</title>
   <h1>Welcome to NorthSide Banking</h1>
   <h2> Please Login Here:</h1>
-  <form action='/login' method='POST'>
+  <form>
     <label for='username'>Username:</label>
     <input type='text' id='username' name='username'>
     <label for='pass'>Password:</label>
     <input type='password' id='password' name='password'>
-    <input type='submit' value='Login'>
+    <input type='submit' value='Login' onclick="loadDoc()">
     </form>
   </div>
 <div>
 <<<<<<< HEAD
 	<h2><a href="register.html">Click here</a> to register</h2>
 =======
-<h2> Register for an Account Here!</h2>
-<form action="/register" method='POST'>
-    <label for='username'>Username:</label>
-    <input type='text' id='username' name='username'>
-    <label for='pass'>Password:</label>
-    <input type='password' id='password' name='password'>
-    <input type='submit' value='register'>
->>>>>>> 5fde3f9d08459609cae220ab41335352c496a91a
-    </form>
-  </div>
-</html>
