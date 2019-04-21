@@ -1,4 +1,3 @@
-
 // Import Express Client Sessions and Body Parser
 
 const express = require('express');
@@ -8,6 +7,7 @@ require('body-parser-xml')(bodyParser);
 //Create the express app.
 var app=express();
 var fs=require('fs');
+var os=require('os');
 app.use(sessions({
 cookieName: 'session',
 secret: 'random_string_goes_here',
@@ -54,8 +54,8 @@ app.post('/login',function(req,res){
 	// get username and password from form
 
 
-	var user = encodeHTML(req.body.account.username);
-	var pass = encodeHTML(req.body.account.password);
+	var user = (req.body.account.username);
+	var pass = (req.body.account.password);
 	console.log(user);
 	console.log(pass);
 
@@ -84,6 +84,23 @@ app.post('/login',function(req,res){
 });
 app.post('/create',function(req,res){
       console.log(req.body);
+      var username = (req.body.account.username);
+      var firstname = (req.body.account.fname);
+      var lastname = (req.body.account.lname);
+      var address= (req.body.account.address);
+      var password=(req.body.account.password);
+      var text= "{username:"+username+",password:"+password+".firstname:"+firstname
+      +",lastname:"+lastname+",address:"+address+",accounts:"+"}";
+      fs.open("mydb.txt",'a',function(err,id){
+        fs.write(id,text+os.EOL,null,'utf8',function(){
+          fs.close(id,function(){
+            console.log('New User Successfully Registered');  
+          });
+        });
+      });
+
+
+
       res.send("Success!");
 });
 app.get('/dashboard',function(req,res){
@@ -101,7 +118,5 @@ app.get('/logout', function(req, res){
     res.redirect('/');
 });
 
-function encodeHTML(s) {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
-}
+
 app.listen(3000);
