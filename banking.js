@@ -52,8 +52,10 @@ app.post('/index', function(req, res) {
 // Login script when the user inputs user name and password
 app.post('/login',function(req,res){
 	// get username and password from form
-	var user = req.body.account.username;
-	var pass = req.body.account.password;
+
+
+	var user = encodeHTML(req.body.account.username);
+	var pass = encodeHTML(req.body.account.password);
 	console.log(user);
 	console.log(pass);
 
@@ -81,7 +83,7 @@ app.post('/login',function(req,res){
 
 });
 app.post('/create',function(req,res){
-
+      console.log(req.body);
       res.send("Success!");
 });
 app.get('/dashboard',function(req,res){
@@ -98,4 +100,8 @@ app.get('/logout', function(req, res){
 
     res.redirect('/');
 });
+
+function encodeHTML(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+}
 app.listen(3000);

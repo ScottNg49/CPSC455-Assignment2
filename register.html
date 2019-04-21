@@ -3,32 +3,50 @@
 <head>
 	<title>Register Forms</title>
 </head>
-<body>
+<body bgcolor="#E6E6FA">
 	<h1>Register</h1>
-	
-	<form action = "/index" method='POST'>
+
+	<form>
 		<div>
 			<!-- User input for First name & Last name -->
 			<!-- FIRST NAME -->
+			<label for = "username">Username </label>
+			<input name="username" id="username" type = "text" placeholder="Swag" required>
+			<br>
 			<label for = "fName">First Name: </label>
-			<input name="first" type = "text" placeholder="John" required>
-
+			<input name="first" id="fname" type = "text" placeholder="John" required>
+			<br>
 			<!-- LAST NAME -->
 			<label for = "lName">Last Name: </label>
-			<input name = "last" type = "text" placeholder="Smith" required>
-
+			<input name = "last" id="lname" type = "text" placeholder="Smith" required>
+			<br>
 			<!-- Email -->
 			<label for = "email">Email: </label>
-			<input name="email" type="email" placeholder="your email" required>
-
+			<input name="email" id="email" type="email" placeholder="your email" required>
+			<br>
 			<label for = "password">Password: </label>
-			<input name="password" type="password" placeholder="your password" pattern=".{5,10}" required title="Password must be between 5 and 10 characters">
+			<input name="password" id="password" type="password" placeholder="your password" pattern=".{5,10}" required title="Password must be between 5 and 10 characters">
+			<br>
 
-			<button>Submit</button>
+			<input type='submit' value='Register' onclick="loadDoc()">
 		</div>
+			<h2><a href="/">Click here</a> to login</h2>
 	</form>
-	
-	
+	<script>
+	function loadDoc() {
+	  var message= "<?xml version='1.0'?>"+"<account>"+
+		"<username>"+document.getElementById('username').value+"</username>"+
+		"<password>"+document.getElementById("password").value+"</password>"+
+		"<fname>"+document.getElementById("fname").value+"</fname>"+
+		"<lname>"+document.getElementById("lname").value+"</lname>"+
+		"<email>"+document.getElementById("email").value+"</email>"+"</account>";
+	  var xhttp = new XMLHttpRequest();
+	  xhttp.open("POST", "/create", false);
+	  xhttp.setRequestHeader("Content-type", "text/xml");
+	  xhttp.send(message);
+	}
+	</script>
+
 
 
 </body>
