@@ -6,6 +6,7 @@ require('body-parser-xml')(bodyParser);
 var app = express()
 var fs=require('fs');
 var os=require('os');
+app.use(bodyParser.xml());
 
 app.use(sessions({
     cookieName: 'session',
@@ -13,8 +14,6 @@ app.use(sessions({
     duration: 30*60*1000,
     activeDuration:5*60*1000,
     }));
-
-app.use(bodyParser.xml());
 
 var authorizedUsers= [['John','Secret']]
 
@@ -79,6 +78,12 @@ app.post('/login',function(req,res){
 });
 
 app.post('/create',function(req,res){
+
+    if(!req.session.username)
+    {
+      res.redirect("/");
+    }
+
     console.log(req.body);
     var username = (req.body.account.username);
     var firstname = (req.body.account.fname);
@@ -118,8 +123,14 @@ app.post('/create',function(req,res){
 });
 
 app.use('/dashboard', function(req,res) {
+
+    if(!req.session.username)
+    {
+      res.redirect("/");
+    }
+
     // res.write(Users[0])
-    var name = "Scott"
+    var name = req.session.username
     var page = "<html>"
     page += "<title> NorthSide Dashboard</title>"
     page += "<body> <h1> Welcome back to NorthSide Banking, " + name + "</h1><br><br>"
@@ -131,6 +142,8 @@ app.use('/dashboard', function(req,res) {
     page += "<button>Withdraw Money!</button> </a><br><br>"
     page += "<a href='http://localhost:3000/transfer'>"
     page += "<button>Transfer Money!</button> </a><br><br>"
+    page += "<a href='http://localhost:3000/logout'>"
+    page += "<button>Logout Now!</button></a><br><br>"
 
     page += "</body></html>"
 
@@ -153,8 +166,14 @@ app.use('/dashboard', function(req,res) {
 
 });
 
-app.get('/deposit', function(req,res, ) {
+app.get('/deposit', function(req,res) {
     // res.send('deposit')
+
+    if(!req.session.username)
+    {
+      res.redirect("/");
+    }
+
     var page = "<!DOCTYPE html>"
     page += "<html>"
 
@@ -204,13 +223,14 @@ app.get('/deposit', function(req,res, ) {
     
     // go to main page
     page += "<a href='http://localhost:3000/dashboard'>"
-    page += "<button>Main Page</button> </a><br><br>"
+    page += "<button>Main Page</button> </a><br>"
+    page += "<a href='http://localhost:3000/logout'>"
+    page += "<button>Logout Now!</button></a><br><br>"
     
     page += "</body></html>"
 
     res.send(page)
 
-    next();
 });
 
 app.post('/deposit_success', function(req,res) {
@@ -223,6 +243,11 @@ app.post('/deposit_success', function(req,res) {
 
 app.get('/withdraw', function(req,res) {
     // needs to validate database for 
+
+    if(!req.session.username)
+    {
+      res.redirect("/");
+    }
 
     var page = "<html>"
 
@@ -266,7 +291,9 @@ app.get('/withdraw', function(req,res) {
 
     // go to main page
     page += "<a href='http://localhost:3000/dashboard'>"
-    page += "<button>Main Page</button> </a><br><br>"
+    page += "<button>Main Page</button> </a><br>"
+    page += "<a href='http://localhost:3000/logout'>"
+    page += "<button>Logout Now!</button></a><br><br>"
 
     page += "</body></html>"
 
@@ -283,7 +310,14 @@ app.post('/withdraw_success', function(req,res) {
 })
 
 app.get('/transfer', function(req,res) {
+
+    if(!req.session.username)
+    {
+      res.redirect("/");
+    }
+    
     var page = "<html>"
+    
 
     // xml data passing
     page += "<script>"
@@ -333,7 +367,9 @@ app.get('/transfer', function(req,res) {
 
     // go to main page
     page += "<a href='http://localhost:3000/dashboard'>"
-    page += "<button>Main Page</button> </a><br><br>"
+    page += "<button>Main Page</button> </a><br>"
+    page += "<a href='http://localhost:3000/logout'>"
+    page += "<button>Logout Now!</button></a><br><br>"
 
     // closing tags
     page += "</body></html>"
@@ -346,7 +382,16 @@ app.post('/transfer_success', function(req,res) {
     console.log("transfer_success")
 
     res.end()
-})
+});
+
+app.get('/logout', function(req, res){
+
+    // Kill the session
+    // req.session.reset()
+    req.session.destroy();
+
+    res.redirect('/');
+});
 
 app.listen(3000);
 
