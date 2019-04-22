@@ -89,19 +89,36 @@ app.post('/create',function(req,res){
       var lastname = (req.body.account.lname);
       var address= (req.body.account.address);
       var password=(req.body.account.password);
-      var text= "{username:"+username+",password:"+password+".firstname:"+firstname
-      +",lastname:"+lastname+",address:"+address+",accounts:"+"}";
+      found=false;
+
+
+      for(let index = 0; index < authorizedUsers.length; index++)
+  {
+
+      // A valid user?
+      if(username === authorizedUsers[index][0])
+      {
+        found=true;
+      }
+    }
+    if(found===false){
+      var text= JSON.stringify(req.body);
       fs.open("mydb.txt",'a',function(err,id){
         fs.write(id,text+os.EOL,null,'utf8',function(){
           fs.close(id,function(){
-            console.log('New User Successfully Registered');  
+            console.log('New User Successfully Registered');
+            res.sendFile(__dirname+"/index.html");
           });
         });
       });
+    }
 
+    else{
+      console.log("Username already exists");
+    }
 
+      res.redirect("/");
 
-      res.send("Success!");
 });
 app.get('/dashboard',function(req,res){
 
