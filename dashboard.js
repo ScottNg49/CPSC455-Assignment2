@@ -12,6 +12,7 @@ var lineReader = require('readline').createInterface({
 
 app.use(bodyParser.xml());
 
+// cookie
 app.use(sessions({
     cookieName: 'session',
     secret: 'random_string_goes_here',
@@ -38,18 +39,6 @@ app.get('/register.html', function(req, res) {
 	console.log("I got register");
 	res.sendFile(__dirname + "/register.html");
 });
-
-/*
-app.post('/index', function(req, res) {
-
-	//TODO: send user input to register to new account. Place into database
-	console.log(req.body.first);
-	console.log(req.body.last);
-	console.log(req.body.email);
-	console.log(req.body.password);
-	res.sendFile(__dirname + "/index.html");
-});
-*/
 
 // Login script when the user inputs user name and password
 app.post('/login',function(req,res){
