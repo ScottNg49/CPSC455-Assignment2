@@ -6,6 +6,10 @@ require('body-parser-xml')(bodyParser);
 var app = express()
 var fs=require('fs');
 var os=require('os');
+var lineReader = require('readline').createInterface({
+  input: require('fs').createReadStream('mydb.txt')
+});
+
 app.use(bodyParser.xml());
 
 app.use(sessions({
@@ -54,8 +58,13 @@ app.post('/login',function(req,res){
 	console.log(pass);
 
 	var correctPass = undefined;
-
+  var tempobj=undefined;
 	// is valid user?
+  lineReader.on('line', function (line) {
+    tempobj=JSON.parse(line);
+    
+    console.log('Line from file:', line);
+  });
 	for (let index = 0; index < authorizedUsers.length; index++) {
 		if (authorizedUsers[index][0] == user) {
 			console.log("We found a userName!");
@@ -103,7 +112,11 @@ app.post('/create',function(req,res){
     }
   }
   if(found===false){
-    var text= JSON.stringify(req.body);
+    var tempobj=req.body;
+    tempobj.account.bankacc={};
+    tempobj.account.bankacc["acc1"]='0';
+    console.log(tempobj);
+    var text= JSON.stringify(tempobj);
     fs.open("mydb.txt",'a',function(err,id){
       fs.write(id,text+os.EOL,null,'utf8',function(){
         fs.close(id,function(){
@@ -121,7 +134,60 @@ app.post('/create',function(req,res){
     res.redirect("/");
 
 });
+app.post('/add_success', function(req,res) {
+    // do back end processing here
+    console.log(req.body);
+    console.log("add account Success");
 
+    res.end()
+});
+
+app.use('/add_accounts',function(req,res){
+  // res.send('add_accounts')
+
+      if(!req.session.username)
+      {
+        res.redirect("/");
+      }
+
+      var page = "<!DOCTYPE html>"
+      page += "<html>"
+
+      // xml data passing
+      page += "<script>"
+      page += "function loadDoc() {"
+      page += "var message = \"<?xml version='1.0'?>\"+\"<username>\"+\"<bankacc>\"+'one'+"
+      page += "\"</bankacc>\"+\"<money>\"+'zero'+\"</money>\"+\"</username>\";"
+      page += "var xhttp = new XMLHttpRequest();"
+
+      page += "xhttp.onreadystatechange= function() {"
+      page += "if(xhttp.readyState == 4 && xhttp.status == 200) {"
+      page += "alert('Attempting to Deposit add an account');}}; "
+
+      page += "xhttp.open(\"POST\", \"/add_success\", false);"
+      page += "xhttp.setRequestHeader('Content-type', 'text/xml');"
+      page += "xhttp.send(message);"
+      page += "}"
+      page += "</script>"
+
+      page += "<body>"
+      page += "<h1>Northside Banking Add Account Page</h1><br><br>"
+
+      // start form
+      page +="<h2>Click to add an account</h2>"
+      page +="<input id=\"clickMe\" type=\"button\" value=\"clickme\" onclick=\"loadDoc();\" />"
+
+      // go to main page
+      page += "<a href='http://localhost:3000/dashboard'>"
+      page += "<button>Main Page</button> </a><br>"
+      page += "<a href='http://localhost:3000/logout'>"
+      page += "<button>Logout Now!</button></a><br><br>"
+
+      page += "</body></html>"
+
+      res.send(page)
+
+});
 app.use('/dashboard', function(req,res) {
 
     if(!req.session.username)
@@ -159,7 +225,7 @@ app.use('/dashboard', function(req,res) {
         // account_list_from (drop_down)
         // account_list_to (drop_down)
         // amount (user_input_box)
-        
+
     // display accounts
     //
     res.send(page)
@@ -216,17 +282,17 @@ app.get('/deposit', function(req,res) {
     page += "</select><br><br>"
 
     // deposit user input
-    page += "<label for='deposit'>Deposit between $10 and $10000   </label>" 
+    page += "<label for='deposit'>Deposit between $10 and $10000   </label>"
     page += "<input type='number' id='deposit' name='deposit' value='0' min='10' max='10000' required>"
     page += "<input type='submit' value='Confirm'>"
     page += "</form>"
-    
+
     // go to main page
     page += "<a href='http://localhost:3000/dashboard'>"
     page += "<button>Main Page</button> </a><br>"
     page += "<a href='http://localhost:3000/logout'>"
     page += "<button>Logout Now!</button></a><br><br>"
-    
+
     page += "</body></html>"
 
     res.send(page)
@@ -242,7 +308,7 @@ app.post('/deposit_success', function(req,res) {
 });
 
 app.get('/withdraw', function(req,res) {
-    // needs to validate database for 
+    // needs to validate database for
 
     if(!req.session.username)
     {
@@ -284,7 +350,7 @@ app.get('/withdraw', function(req,res) {
     page += '</select><br><br>'
 
     // withdraw user input
-    page += "<label for='withdraw'>Withdraw between $10 and $10000 at a time  </label>" 
+    page += "<label for='withdraw'>Withdraw between $10 and $10000 at a time  </label>"
     page += "<input type='number' id='withdraw' name='withdraw' value='0' min='10' max='10000' required>"
     page += "<input type='submit' value='Confirm'>"
     page += "</form>"
@@ -315,9 +381,9 @@ app.get('/transfer', function(req,res) {
     {
       res.redirect("/");
     }
-    
+
     var page = "<html>"
-    
+
 
     // xml data passing
     page += "<script>"
@@ -358,9 +424,9 @@ app.get('/transfer', function(req,res) {
     page += "<option value='Dummy_2'>Dummy_2</option>"
     page += "<option value='Dummy_3'>Dummy_3</option>"
     page += '</select><br><br>'
-    
+
     // transfer user input
-    page += "<label for='transfer'>Transfer between $1 and $10000   </label>" 
+    page += "<label for='transfer'>Transfer between $1 and $10000   </label>"
     page += "<input type='number' id='transfer' value=0 name='transfer' min='1' max='10000' required>"
     page += "<input type='submit' value='Confirm'>"
     page += "</form>"
@@ -394,4 +460,3 @@ app.get('/logout', function(req, res){
 });
 
 app.listen(3000);
-
