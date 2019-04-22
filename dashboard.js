@@ -21,6 +21,7 @@ app.use(sessions({
 
 var authorizedUsers= [['John','Secret']]
 
+// Get intial response to homepage
 app.get('/',function(req,res){
     if(req.session.username)
     {
@@ -32,11 +33,13 @@ app.get('/',function(req,res){
     }
   });
 
+// Take user to register page
 app.get('/register.html', function(req, res) {
 	console.log("I got register");
 	res.sendFile(__dirname + "/register.html");
 });
 
+/*
 app.post('/index', function(req, res) {
 
 	//TODO: send user input to register to new account. Place into database
@@ -46,29 +49,27 @@ app.post('/index', function(req, res) {
 	console.log(req.body.password);
 	res.sendFile(__dirname + "/index.html");
 });
+*/
 
 // Login script when the user inputs user name and password
 app.post('/login',function(req,res){
 	// get username and password from form
-
-
 	var user = (req.body.account.username);
 	var pass = (req.body.account.password);
 	console.log(user);
 	console.log(pass);
 
 	var correctPass = undefined;
-  var tempobj=undefined;
+	var tempobj=undefined;
 	// is valid user?
-  lineReader.on('line', function (line) {
-    tempobj=JSON.parse(line);
-    
-    console.log('Line from file:', line);
-  });
+	lineReader.on('line', function (line) {
+		tempobj=JSON.parse(line);
+    		console.log('Line from file:', line);
+	});
 	for (let index = 0; index < authorizedUsers.length; index++) {
 		if (authorizedUsers[index][0] == user) {
 			console.log("We found a userName!");
-      req.session.username=user;
+      			req.session.username=user;
 			correctPass = authorizedUsers[index][1];
 			break;
 		}
@@ -77,69 +78,101 @@ app.post('/login',function(req,res){
 	// Check if username matches with input password
 	if (correctPass && correctPass === pass) {
 		// set the session
-
-      res.redirect("/dashboard");
-
+		res.redirect("/dashboard");
 	} else {
-		  res.send("Wrong");
+		res.send("Wrong");
 	}
 
 });
 
+
+// userExist(user) - returns true(1) if username already exist or false(0) if username does not exist
+// NOTE: will check case-insensitive
+// NOTE: will process sychronuously
+function userExist(user) {
+	// read file
+	var contents = fs.readFileSync("mydb.txt", "utf8")
+
+	//console.log("Read: ", contents); // print the entire data from mydb.txt
+	var array = contents.toString().split("\n");
+	var textline = undefined;
+	var temp_textline = undefined;
+	var temp_user = undefined;
+	temp_user = user.toString().toLowerCase();
+	var exist = false;
+	for (var i = 0; i < array.length-1; i++) {
+		textline = JSON.parse(array[i]);
+		temp_textline = textline.account.username.toString().toLowerCase();
+
+		//console.log("I am comparing: " + temp_textline + " & " + temp_user);
+		if (temp_textline == temp_user) {
+			exist = true;
+			break;
+		}
+		textline = JSON.parse(array[i]);
+		//console.log("array[" + i + "]: " + array[i]);
+		//console.log("textline.account.username: " + textline.account.username);
+	}
+	return exist;
+};
+
+// From register.html - get user input and register account
 app.post('/create',function(req,res){
+	// If the user does not have a cookie then go back to login page
+    	if(!req.session.username) {
+		res.redirect("/");
+	}
+	
+	//console.log("app.post('/create', function(req, res) - req.body: " + req.body);
+    	var username = (req.body.account.username); // get username
+    	var firstname = (req.body.account.fname); // get first name
+    	var lastname = (req.body.account.lname); // get last name
+    	var address= (req.body.account.address); // get email address
+    	var password=(req.body.account.password); // get password
+    	found=false;
+	
+	// check database if unique user id exists
+	found = userExist(username);
+	console.log("found: " + found);
+	/*
+    	for(let index = 0; index < authorizedUsers.length; index++) {
 
-    if(!req.session.username)
-    {
-      res.redirect("/");
-    }
+ 		// A valid user?
+    		if(username === authorizedUsers[index][0]) {
+      		found=true;
+		}
+  	}
+	*/
+  	if(found===false){
+    		var tempobj=req.body;
+		tempobj.account.bankacc={};
+    		tempobj.account.bankacc["acc1"]='0';
+    		console.log(tempobj);
+    		var text= JSON.stringify(tempobj);
+    		fs.open("mydb.txt",'a',function(err,id){
+      			fs.write(id,text+os.EOL,null,'utf8',function(){
+        			fs.close(id,function(){
+          				console.log('New User Successfully Registered');
+          				res.sendFile(__dirname+"/index.html");
+        			});
+      			});
+    		});
+  	}
 
-    console.log(req.body);
-    var username = (req.body.account.username);
-    var firstname = (req.body.account.fname);
-    var lastname = (req.body.account.lname);
-    var address= (req.body.account.address);
-    var password=(req.body.account.password);
-    found=false;
+	else{
+		// TODO: need to send indicator that the Username already exits
+		console.log("Username already exists");
+  	}
 
-
-    for(let index = 0; index < authorizedUsers.length; index++)
-{
-
-    // A valid user?
-    if(username === authorizedUsers[index][0])
-    {
-      found=true;
-    }
-  }
-  if(found===false){
-    var tempobj=req.body;
-    tempobj.account.bankacc={};
-    tempobj.account.bankacc["acc1"]='0';
-    console.log(tempobj);
-    var text= JSON.stringify(tempobj);
-    fs.open("mydb.txt",'a',function(err,id){
-      fs.write(id,text+os.EOL,null,'utf8',function(){
-        fs.close(id,function(){
-          console.log('New User Successfully Registered');
-          res.sendFile(__dirname+"/index.html");
-        });
-      });
-    });
-  }
-
-  else{
-    console.log("Username already exists");
-  }
-
-    res.redirect("/");
+	res.redirect("/");
 
 });
-app.post('/add_success', function(req,res) {
-    // do back end processing here
-    console.log(req.body);
-    console.log("add account Success");
 
-    res.end()
+app.post('/add_success', function(req,res) {
+	// do back end processing here
+    	console.log(req.body);
+    	console.log("add account Success");
+    	res.end()
 });
 
 app.use('/add_accounts',function(req,res){
