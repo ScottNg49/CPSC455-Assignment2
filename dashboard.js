@@ -1,11 +1,30 @@
 const express = require('express');
 const sessions = require('client-sessions');
 const bodyParser = require("body-parser");
+const helmet = require("helmet");
 require('body-parser-xml')(bodyParser);
-
+"use strict"
 var app = express()
 var fs=require('fs');
 var os=require('os');
+app.use(helmet.contentSecurityPolicy({
+    directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'"]
+    }
+}));
+// displayBankStatement(string user): get user name and outputs html format of bankstatement pulled from mydb.txt
+function displayBankStatement(user) {
+	var textline = retObj(user);
+	var page = "";
+
+	for (var i = 0; i < Object.keys(textline.account.bankacc).length; i++) {
+		let acc = "acc" + (i+1);
+		page += "Bank account no." + (i+1) + ": $ " + parseInt(textline.account.bankacc[acc]).toFixed(2) + "<br><br>";
+	}
+
+	return page;
+};
 
 // userExist(user) - returns true(1) if username already exist or false(0) if username does not exist
 // NOTE: will check case-insensitive
@@ -71,6 +90,7 @@ app.use(sessions({
     cookieName: 'session',
     secret: '0x8i3Jlxnw3NxA52B7jF',
     duration: 3*60*1000,
+		activeDuration: 3*60*1000,
     cookie: {httpOnly: true}
     }));
 
@@ -246,10 +266,11 @@ app.use('/dashboard', function(req,res) {
     }
 
     // res.write(Users[0])
-    var name = req.session.username
+    let name = req.session.username
     var page = "<html>"
     page += "<title> NorthSide Dashboard</title>"
     page += "<body> <h1> Welcome back to NorthSide Banking, " + name + "</h1><br><br>"
+    page += displayBankStatement(name);
     page += "<a href='http://localhost:3000/add_accounts'>"
     page += "<button>Add Accounts!</button> </a><br><br>"
     page += "<a href='http://localhost:3000/deposit'>"
@@ -318,6 +339,7 @@ app.get('/deposit', function(req,res) {
 
     page += "<body>"
     page += "<h1>Northside Banking Deposit Page</h1><br><br>"
+    page += displayBankStatement(req.session.username);
 
     // start form
     page += "<form onsubmit='return loadDoc();'>"
@@ -409,6 +431,8 @@ app.get('/withdraw', function(req,res) {
 
     page += "<body>"
     page += "<h1>Northside Banking Withdrawing Page</h1><br><br>"
+    page += displayBankStatement(req.session.username);
+
 
     // start form
     page += "<form onsubmit='return loadDoc()'>"
@@ -446,7 +470,7 @@ app.post('/withdraw_success', function(req,res) {
   let acc=req.body.username.account.toString(); //sets the users name to acc
   // can make an if statement here to add more accounts
   let valueinacc=parseInt(tempobj.account.bankacc[acc],10);//gets the value of acc
-  let withdrawal=parseInt(req.body.username.withdraw,10);//gets value to deposit
+  let withdrawal=parseInt(req.body.username.withdraw,10);//gets value to withdraw
   if(valueinacc>=withdrawal)
   {
   let newval=valueinacc-withdrawal; //new value in account
@@ -507,6 +531,8 @@ app.get('/transfer', function(req,res) {
 
     page += "<body>"
     page += "<h1>Northside Banking Transfer Page</h1><br><br>"
+    page += displayBankStatement(req.session.username);
+
 
     // form start
     page += "<form onsubmit='loadDoc()'>"
@@ -548,19 +574,24 @@ app.get('/transfer', function(req,res) {
 app.post('/transfer_success', function(req,res) {
     console.log(req.body)
 
+    let tempobj=retObj(req.session.username);
+    let acc1 =req.body.username.sender.toString();
+    let acc2 =req.body.username.receiver.toString();
 
-/*    let tempobj=retObj(req.session.username); //sets temp obj to the user logged in
-    let acc=req.body.username.account.toString(); //sets the users name to acc
     // can make an if statement here to add more accounts
-    let valueinacc=parseInt(tempobj.account.bankacc[acc],10);//gets the value of acc
-    let withdrawal=parseInt(req.body.username.withdraw,10);//gets value to deposit
-    if(valueinacc>=withdrawal)
-    {
-    let newval=valueinacc-withdrawal; //new value in account
-    console.log(newval);
-    tempobj.account.bankacc[acc]=newval;
-    console.log(tempobj);
 
+    let valueinacc1=parseInt(tempobj.account.bankacc[acc1],10);//gets the value of acc of sender
+    let valueinacc2=parseInt(tempobj.account.bankacc[acc2],10);//gets the value of acc of reciever
+    let transfer=parseInt(req.body.username.transfer,10);//gets value to transfer
+    if(valueinacc1>=transfer)
+    {
+    let newval=valueinacc1-transfer; //new value in account 1
+    let newval2=valueinacc2+transfer;// new value in account 2
+    console.log(valueinacc1);
+    tempobj.account.bankacc[acc1]=newval;
+    tempobj.account.bankacc[acc2]=newval2;
+    console.log(valueinacc2);
+    }
     //Writes to the database the new line.
     fs.readFile('mydb.txt', 'utf8', function (err,data)
     {
@@ -571,7 +602,7 @@ app.post('/transfer_success', function(req,res) {
         if (err) return console.log(err);
       });
     });
-*/
+
     console.log("transfer_success")
 
     res.end()
