@@ -9,6 +9,62 @@ var os=require('os');
 var lineReader = require('readline').createInterface({
   input: require('fs').createReadStream('mydb.txt')
 });
+// userExist(user) - returns true(1) if username already exist or false(0) if username does not exist
+// NOTE: will check case-insensitive
+// NOTE: will process sychronuously
+function userExist(user) {
+	// read file
+	var contents = fs.readFileSync("mydb.txt", "utf8")
+
+	//console.log("Read: ", contents); // print the entire data from mydb.txt
+	var array = contents.toString().split("\n");
+	var textline = undefined;
+	var temp_textline = undefined;
+	var temp_user = undefined;
+	temp_user = user.toString().toLowerCase();
+	var exist = false;
+	for (var i = 0; i < array.length-1; i++) {
+		textline = JSON.parse(array[i]);
+		temp_textline = textline.account.username.toString().toLowerCase();
+
+		//console.log("I am comparing: " + temp_textline + " & " + temp_user);
+		if (temp_textline == temp_user) {
+			exist = true;
+			break;
+		}
+		textline = JSON.parse(array[i]);
+		//console.log("array[" + i + "]: " + array[i]);
+		//console.log("textline.account.username: " + textline.account.username);
+	}
+	return exist;
+};
+//function to return the data of that username;
+function retObj(user) {
+	// read file
+	var contents = fs.readFileSync("mydb.txt", "utf8")
+
+	//console.log("Read: ", contents); // print the entire data from mydb.txt
+	var array = contents.toString().split("\n");
+	var textline = undefined;
+	var temp_textline = undefined;
+	var temp_user = undefined;
+	temp_user = user.toString().toLowerCase();
+	var exist = false;
+	for (var i = 0; i < array.length-1; i++) {
+		textline = JSON.parse(array[i]);
+		temp_textline = textline.account.username.toString().toLowerCase();
+
+		//console.log("I am comparing: " + temp_textline + " & " + temp_user);
+		if (temp_textline == temp_user) {
+			exist = true;
+			break;
+		}
+
+		//console.log("array[" + i + "]: " + array[i]);
+		//console.log("textline.account.username: " + textline.account.username);
+	}
+	return textline;
+};
 
 app.use(bodyParser.xml());
 
@@ -44,29 +100,31 @@ app.get('/register.html', function(req, res) {
 app.post('/login',function(req,res){
 	// get username and password from form
 	var user = (req.body.account.username);
-	var pass = (req.body.account.password);
+	var pass = (req.body.account.password.toString());
+
 	console.log(user);
 	console.log(pass);
 
 	var correctPass = undefined;
 	var tempobj=undefined;
 	// is valid user?
-	lineReader.on('line', function (line) {
-		tempobj=JSON.parse(line);
-    		console.log('Line from file:', line);
-	});
-	for (let index = 0; index < authorizedUsers.length; index++) {
-		if (authorizedUsers[index][0] == user) {
-			console.log("We found a userName!");
-      			req.session.username=user;
-			correctPass = authorizedUsers[index][1];
-			break;
-		}
-	}
+
+  if (userExist(user)){
+    console.log("We Found a Username!");
+    var tempobj=retObj(user);
+    correctPass=tempobj.account.password.toString();
+
+
+
+
+
+  }
 
 	// Check if username matches with input password
 	if (correctPass && correctPass === pass) {
 		// set the session
+
+    req.session.username=user;
 		res.redirect("/dashboard");
 	} else {
 		res.send("Wrong");
@@ -75,35 +133,6 @@ app.post('/login',function(req,res){
 });
 
 
-// userExist(user) - returns true(1) if username already exist or false(0) if username does not exist
-// NOTE: will check case-insensitive
-// NOTE: will process sychronuously
-function userExist(user) {
-	// read file
-	var contents = fs.readFileSync("mydb.txt", "utf8")
-
-	//console.log("Read: ", contents); // print the entire data from mydb.txt
-	var array = contents.toString().split("\n");
-	var textline = undefined;
-	var temp_textline = undefined;
-	var temp_user = undefined;
-	temp_user = user.toString().toLowerCase();
-	var exist = false;
-	for (var i = 0; i < array.length-1; i++) {
-		textline = JSON.parse(array[i]);
-		temp_textline = textline.account.username.toString().toLowerCase();
-
-		//console.log("I am comparing: " + temp_textline + " & " + temp_user);
-		if (temp_textline == temp_user) {
-			exist = true;
-			break;
-		}
-		textline = JSON.parse(array[i]);
-		//console.log("array[" + i + "]: " + array[i]);
-		//console.log("textline.account.username: " + textline.account.username);
-	}
-	return exist;
-};
 
 // From register.html - get user input and register account
 app.post('/create',function(req,res){
@@ -111,7 +140,7 @@ app.post('/create',function(req,res){
     	if(!req.session.username) {
 		res.redirect("/");
 	}
-	
+
 	//console.log("app.post('/create', function(req, res) - req.body: " + req.body);
     	var username = (req.body.account.username); // get username
     	var firstname = (req.body.account.fname); // get first name
@@ -119,10 +148,11 @@ app.post('/create',function(req,res){
     	var address= (req.body.account.address); // get email address
     	var password=(req.body.account.password); // get password
     	found=false;
-	
+
 	// check database if unique user id exists
-	found = userExist(username);
+  found = userExist(username);
 	console.log("found: " + found);
+
 	/*
     	for(let index = 0; index < authorizedUsers.length; index++) {
 
@@ -153,7 +183,6 @@ app.post('/create',function(req,res){
 		console.log("Username already exists");
   	}
 
-	res.redirect("/");
 
 });
 
@@ -184,7 +213,7 @@ app.use('/add_accounts',function(req,res){
 
       page += "xhttp.onreadystatechange= function() {"
       page += "if(xhttp.readyState == 4 && xhttp.status == 200) {"
-      page += "alert('Attempting to Deposit add an account');}}; "
+      page += "alert('Added one Bank account');}}; "
 
       page += "xhttp.open(\"POST\", \"/add_success\", false);"
       page += "xhttp.setRequestHeader('Content-type', 'text/xml');"
