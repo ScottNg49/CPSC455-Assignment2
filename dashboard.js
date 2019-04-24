@@ -1,3 +1,4 @@
+'use strict'
 const express = require('express');
 const sessions = require('client-sessions');
 const bodyParser = require("body-parser");
@@ -71,9 +72,9 @@ app.use(bodyParser.xml());
 // cookie
 app.use(sessions({
     cookieName: 'session',
-    secret: 'random_string_goes_here',
-    duration: 30*60*1000,
-    activeDuration:5*60*1000,
+    secret: '0x8i3Jlxnw3NxA52B7jF',
+    duration: 3*60*1000,
+    cookie: {httpOnly: true}
     }));
 
 var authorizedUsers= [['John','Secret']]
@@ -155,7 +156,6 @@ app.post('/create',function(req,res){
 
 	/*
     	for(let index = 0; index < authorizedUsers.length; index++) {
-
  		// A valid user?
     		if(username === authorizedUsers[index][0]) {
       		found=true;
