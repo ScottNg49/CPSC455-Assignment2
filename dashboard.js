@@ -6,9 +6,7 @@ require('body-parser-xml')(bodyParser);
 var app = express()
 var fs=require('fs');
 var os=require('os');
-var lineReader = require('readline').createInterface({
-  input: require('fs').createReadStream('mydb.txt')
-});
+
 // userExist(user) - returns true(1) if username already exist or false(0) if username does not exist
 // NOTE: will check case-insensitive
 // NOTE: will process sychronuously
@@ -150,7 +148,7 @@ app.post('/create',function(req,res){
     	found=false;
 
 	// check database if unique user id exists
-      if(fs.readFileSync("mydb.txt","utf8")!=="")
+      if(fs.readFileSync("mydb.txt","utf8")!=="")//checks if file is empty
       {
       found = userExist(username);
 	    console.log("found: " + found);
