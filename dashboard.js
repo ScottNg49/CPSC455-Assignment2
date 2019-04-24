@@ -1,4 +1,3 @@
-'use strict'
 const express = require('express');
 const sessions = require('client-sessions');
 const bodyParser = require("body-parser");
@@ -77,7 +76,7 @@ app.use(sessions({
     cookie: {httpOnly: true}
     }));
 
-var authorizedUsers= [['John','Secret']]
+
 
 // Get intial response to homepage
 app.get('/',function(req,res){
@@ -93,7 +92,6 @@ app.get('/',function(req,res){
 
 // Take user to register page
 app.get('/register.html', function(req, res) {
-	console.log("I got register");
 	res.sendFile(__dirname + "/register.html");
 });
 
@@ -128,7 +126,8 @@ app.post('/login',function(req,res){
     req.session.username=user;
 		res.redirect("/dashboard");
 	} else {
-		res.send("Wrong");
+    res.write("Wrong");
+		res.end();
 	}
 
 });
@@ -151,38 +150,40 @@ app.post('/create',function(req,res){
     	found=false;
 
 	// check database if unique user id exists
-  found = userExist(username);
-	console.log("found: " + found);
+      if(fs.readFileSync("mydb.txt","utf8")!=="")
+      {
+      found = userExist(username);
+	    console.log("found: " + found);
+      }
+  	  if(found===false){
+    	let tempobj=req.body;
 
-	/*
-    	for(let index = 0; index < authorizedUsers.length; index++) {
- 		// A valid user?
-    		if(username === authorizedUsers[index][0]) {
-      		found=true;
-		}
-  	}
-	*/
-  	if(found===false){
-    		var tempobj=req.body;
-		tempobj.account.bankacc={};
-    		tempobj.account.bankacc["acc1"]='0';
-    		console.log(tempobj);
-    		var text= JSON.stringify(tempobj);
-    		fs.open("mydb.txt",'a',function(err,id){
-      			fs.write(id,text+os.EOL,null,'utf8',function(){
-        			fs.close(id,function(){
-          				console.log('New User Successfully Registered');
-          				res.sendFile(__dirname+"/index.html");
-        			});
-      			});
-    		});
+		  tempobj.account.bankacc={};
+      for (i=1;i<=3;i++)
+      {
+        let acc="acc"+i;
+        tempobj.account.bankacc[acc]='0';
+      }
+    console.log(tempobj);
+    var text= JSON.stringify(tempobj);
+    fs.open("mydb.txt",'a',function(err,id)
+    {
+      fs.write(id,text+os.EOL,null,'utf8',function()
+      {
+        		fs.close(id,function()
+              {
+          	     console.log('New User Successfully Registered');
+          	     res.sendFile(__dirname+"/index.html");
+        		   });
+      });
+     });
   	}
 
 	else{
 		// TODO: need to send indicator that the Username already exits
 		console.log("Username already exists");
   	}
-
+    res.end();
 
 });
 
@@ -327,9 +328,9 @@ app.get('/deposit', function(req,res) {
     // drop down menu
     page += "<label for='account'>Choose an account   </label>"
     page += "<select id=account>"
-    page += "<option value='Dummy_1'>Dummy_1</option>"
-    page += "<option value='Dummy_2'>Dummy_2</option>"
-    page += "<option value='Dummy_3'>Dummy_3</option>"
+    page += "<option value='acc1'>acc1</option>"
+    page += "<option value='acc2'>acc2</option>"
+    page += "<option value='acc3'>acc3</option>"
     page += "</select><br><br>"
 
     // deposit user input
@@ -352,15 +353,37 @@ app.get('/deposit', function(req,res) {
 
 app.post('/deposit_success', function(req,res) {
     // do back end processing here
-    console.log(req.body)
-    console.log("Deposit Success")
 
+    let tempobj=retObj(req.session.username); //sets temp obj to the user logged in
+    let acc=req.body.username.account.toString(); //sets the users name to acc
+    // can make an if statement here to add more accounts
+    let valueinacc=parseInt(tempobj.account.bankacc[acc],10);//gets the value of acc
+    let deposit=parseInt(req.body.username.deposit,10);//gets value to deposit
+    let newval=valueinacc+deposit; //new value in account
+    console.log(newval);
+    tempobj.account.bankacc[acc]=newval;
+    console.log(tempobj);
+
+    //Writes to the database the new line.
+    fs.readFile('mydb.txt', 'utf8', function (err,data)
+    {
+
+      var formatted = data.replace(JSON.stringify(retObj(req.session.username)),JSON.stringify(tempobj));
+      fs.writeFile('mydb.txt', formatted, 'utf8', function (err)
+      {
+        if (err) return console.log(err);
+      });
+    });
+
+
+
+    console.log("Deposit Success")
     res.end()
 });
 
 app.get('/withdraw', function(req,res) {
     // needs to validate database for
-
+    let amountinbank=retObj(req.session.username).account;
     if(!req.session.username)
     {
       res.redirect("/");
@@ -395,9 +418,9 @@ app.get('/withdraw', function(req,res) {
     // drop down menu
     page += "<label for='account'>Choose an account   </label>"
     page += "<select id=account>"
-    page += "<option value='Dummy_1'>Dummy_1</option>"
-    page += "<option value='Dummy_2'>Dummy_2</option>"
-    page += "<option value='Dummy_3'>Dummy_3</option>"
+    page += "<option value='acc1'>acc1</option>"
+    page += "<option value='acc2'>acc2</option>"
+    page += "<option value='acc3'>acc3</option>"
     page += '</select><br><br>'
 
     // withdraw user input
@@ -418,8 +441,38 @@ app.get('/withdraw', function(req,res) {
 });
 
 app.post('/withdraw_success', function(req,res) {
-    console.log(req.body)
+
+  // do back end processing here
+
+  let tempobj=retObj(req.session.username); //sets temp obj to the user logged in
+  let acc=req.body.username.account.toString(); //sets the users name to acc
+  // can make an if statement here to add more accounts
+  let valueinacc=parseInt(tempobj.account.bankacc[acc],10);//gets the value of acc
+  let withdrawal=parseInt(req.body.username.withdraw,10);//gets value to deposit
+  if(valueinacc>=withdrawal)
+  {
+  let newval=valueinacc-withdrawal; //new value in account
+  console.log(newval);
+  tempobj.account.bankacc[acc]=newval;
+  console.log(tempobj);
+
+  //Writes to the database the new line.
+  fs.readFile('mydb.txt', 'utf8', function (err,data)
+  {
+
+    var formatted = data.replace(JSON.stringify(retObj(req.session.username)),JSON.stringify(tempobj));
+    fs.writeFile('mydb.txt', formatted, 'utf8', function (err)
+    {
+      if (err) return console.log(err);
+    });
+  });
+
+
     console.log("withdraw_success")
+  }
+  else{
+    console.log("Withdrawl_fail");
+  }
 
     res.end()
 
@@ -463,17 +516,17 @@ app.get('/transfer', function(req,res) {
 
     // drop down menu account 1
     page += "<select id=sender>"
-    page += "<option value='Dummy_1'>Dummy_1</option>"
-    page += "<option value='Dummy_2'>Dummy_2</option>"
-    page += "<option value='Dummy_3'>Dummy_3</option>"
+    page += "<option value='acc1'>acc1</option>"
+    page += "<option value='acc2'>acc2</option>"
+    page += "<option value='acc3'>acc3</option>"
     page += '</select><br><br>'
 
     // drop down menu account 2
     page += "<label for='account'>Choose an account to transfer to   </label>"
     page += "<select id=receiver>"
-    page += "<option value='Dummy_1'>Dummy_1</option>"
-    page += "<option value='Dummy_2'>Dummy_2</option>"
-    page += "<option value='Dummy_3'>Dummy_3</option>"
+    page += "<option value='acc1'>acc1</option>"
+    page += "<option value='acc2'>acc2</option>"
+    page += "<option value='acc3'>acc3</option>"
     page += '</select><br><br>'
 
     // transfer user input
@@ -496,6 +549,31 @@ app.get('/transfer', function(req,res) {
 
 app.post('/transfer_success', function(req,res) {
     console.log(req.body)
+
+
+/*    let tempobj=retObj(req.session.username); //sets temp obj to the user logged in
+    let acc=req.body.username.account.toString(); //sets the users name to acc
+    // can make an if statement here to add more accounts
+    let valueinacc=parseInt(tempobj.account.bankacc[acc],10);//gets the value of acc
+    let withdrawal=parseInt(req.body.username.withdraw,10);//gets value to deposit
+    if(valueinacc>=withdrawal)
+    {
+    let newval=valueinacc-withdrawal; //new value in account
+    console.log(newval);
+    tempobj.account.bankacc[acc]=newval;
+    console.log(tempobj);
+
+    //Writes to the database the new line.
+    fs.readFile('mydb.txt', 'utf8', function (err,data)
+    {
+
+      var formatted = data.replace(JSON.stringify(retObj(req.session.username)),JSON.stringify(tempobj));
+      fs.writeFile('mydb.txt', formatted, 'utf8', function (err)
+      {
+        if (err) return console.log(err);
+      });
+    });
+*/
     console.log("transfer_success")
 
     res.end()
